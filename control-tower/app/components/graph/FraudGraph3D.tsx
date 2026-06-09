@@ -144,6 +144,7 @@ export default function FraudGraph3D({
 }: FraudGraph3DProps) {
   const fgRef = useRef<any>(null);
 const API_BASE = process.env.NEXT_PUBLIC_BACKEND_BASE_URL ?? "";
+const ML_URL = process.env.NEXT_PUBLIC_ML_URL ?? "http://localhost:8001";
   // ── Dynamic import of 3-D force graph (client-only) ──
   const [ForceGraph3D, setForceGraph3D] =
     useState<React.ComponentType<any> | null>(null);
@@ -297,7 +298,7 @@ console.log("TOTAL NODES:", data.nodes.length);
 
         // Try to load real ring data for tour
         try {
-          const ringRes = await fetch(`${API_BASE}/detect-rings`);
+          const ringRes = await fetch(`${ML_URL}/detect-rings`);
           const ringData = await ringRes.json();
           if (ringData?.rings?.length) {
             const top5: TourRing[] = ringData.rings
