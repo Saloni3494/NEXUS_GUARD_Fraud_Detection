@@ -7,12 +7,6 @@
 
 ---
 
-## 🌐 Live Deployment
-
-**Access the deployed application here:**
-
-**[http://34.230.243.158:3000/](http://34.230.243.158:3000/)**
-
 ## 🔐 Admin Panel Credentials
 
 Use the following credentials to access the admin panel after logging in:
