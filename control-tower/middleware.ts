@@ -5,5 +5,5 @@ export default function middleware() {
 }
 
 export const config = {
-  matcher: [], // Don't run middleware on any routes
+  matcher: "/api/never-match-anything-xyz", 
 };
