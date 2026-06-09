@@ -102,7 +102,7 @@ class MuleHunterGNN(torch.nn.Module):
         self.conv1 = SAGEConv(in_channels, hidden)
         self.bn1   = BatchNorm(hidden)
         self.conv2 = GATConv(hidden, hidden, heads=4, concat=False,
-                              dropout=0.10, add_self_loops=False)
+                              dropout=0.10, add_self_loops=True)
         self.bn2   = BatchNorm(hidden)
         self.conv3 = SAGEConv(hidden, hidden // 2)
         self.bn3   = BatchNorm(hidden // 2)
@@ -443,14 +443,24 @@ def load_assets() -> None:
 
         tx_path = SHARED_DATA / "transactions.csv"
         if tx_path.exists():
-            df_tx = pd.read_csv(tx_path)
+            df_tx = pd.read_csv(tx_path, dtype={"source": str, "target": str})
             df_tx["amount"] = pd.to_numeric(df_tx["amount"], errors="coerce").fillna(1.0)
             df_tx = df_tx.rename(columns={"amount": "weight"})
             nx_graph = nx.from_pandas_edgelist(
                 df_tx, source="source", target="target",
                 edge_attr="weight", create_using=nx.DiGraph(),
             )
-            logger.info("  NetworkX graph: %s edges", f"{nx_graph.number_of_edges():,}")
+            logger.info(f"Loaded networkx graph with {nx_graph.number_of_edges()} edges")
+            
+            # Dynamically compute PageRank and Transactions (Degree) to populate UI 
+            # without requiring them in the original dataset
+            pr = nx.pagerank(nx_graph, alpha=0.85, max_iter=100)
+            degrees = dict(nx_graph.degree())
+            
+            if node_df is not None:
+                # Map computed stats to node_df
+                node_df["pagerank"] = node_df["node_id"].map(pr).fillna(0.0)
+                node_df["volume"] = node_df["node_id"].map(degrees).fillna(0)
 
             account_node_set = set(id_map.keys()) if id_map else set()
             logger.info("Pre-caching rings (bounded %ds)...", RING_TIMEOUT_SEC)
@@ -858,9 +868,18 @@ def cluster_report() -> ClusterReport:
         labels=["Low", "Medium", "High", "Critical"],
     )
     dist      = buckets.value_counts().to_dict()
-    top_nodes = node_df.nlargest(10, "community_fraud_rate")[
+    top_nodes_raw = node_df.nlargest(10, "community_fraud_rate")[
         ["node_id", "community_fraud_rate", "is_fraud"]
     ].to_dict("records")
+    
+    top_nodes = [
+        {
+            "node_id": str(r["node_id"]),
+            "community_fraud_rate": float(r["community_fraud_rate"]),
+            "is_fraud": int(r["is_fraud"])
+        }
+        for r in top_nodes_raw
+    ]
 
     return ClusterReport(
         total_clusters     =int(node_df["community_id"].nunique()),
@@ -883,6 +902,7 @@ def network_snapshot(limit: int = 200) -> dict:
             "risk":     round(float(row.get(risk_col, 0)), 4),
             "ring":     int(row.get("ring_membership", 0)) > 0,
             "pagerank": round(float(row.get("pagerank", 0)), 6),
+            "volume":   int(row.get("volume", 0))
         }
         for _, row in top_df.iterrows()
     ]

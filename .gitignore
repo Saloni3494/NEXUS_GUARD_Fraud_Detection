@@ -50,3 +50,8 @@ mule-ai-311
 
 venv311
 eif/
+
+# --- HACKATHON LARGE FILES ---
+DataSet.csv
+*.pt
+*.pth

@@ -1,0 +1,10 @@
+{
+  "version": "MuleHunter-V5",
+  "in_channels": 3924,
+  "hidden_channels": 128,
+  "test_f1": 0.30434782608695654,
+  "test_auc": 0.9523528595224875,
+  "test_precision": 0.23333333333333334,
+  "test_recall": 0.4375,
+  "optimal_threshold": 0.6948791146278381
+}

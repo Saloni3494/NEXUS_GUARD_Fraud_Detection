@@ -63,14 +63,7 @@ const Navbar = () => {
               </span>
               <LogoutButton />
             </div>
-          ) : (
-            <button
-              onClick={handleLoginClick}
-              className="cursor-pointer rounded-full bg-brand-cyan px-6 py-3 text-sm font-bold text-slate-950 transition-all hover:-translate-y-0.5 hover:bg-brand-cyan/90 hover:shadow-[0_10px_30px_rgba(6,182,212,0.25)]"
-            >
-              Login
-            </button>
-          )}
+          ) : null}
         </div>
       </div>
 
