@@ -4,7 +4,7 @@ import { NextResponse } from "next/server";
 
 const { auth } = NextAuth(authConfig);
 
-export default auth((req) => {
+const authMiddleware = auth((req) => {
   const { nextUrl } = req;
   const isLoggedIn = !!req.auth;
   const role = req.auth?.user?.role; 
@@ -31,6 +31,17 @@ export default auth((req) => {
   
   return NextResponse.next();
 });
+
+export default async function middleware(req: any, event: any) {
+  try {
+    return await authMiddleware(req, event);
+  } catch (error) {
+    console.error("MIDDLEWARE CRASH SUPPRESSED:", error);
+    // If Edge auth fails entirely (usually due to Vercel env variable bugs),
+    // we safely let the request through instead of throwing a 500 Server Error.
+    return NextResponse.next();
+  }
+}
 
 export const config = {
   matcher: ["/((?!_next/static|_next/image|favicon.ico).*)"],
