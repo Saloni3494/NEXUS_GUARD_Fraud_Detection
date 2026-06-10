@@ -222,10 +222,10 @@ console.log("TOTAL NODES:", data.nodes.length);
             n.isFraud ?? n.is_fraud ?? n.fraud ?? false
           );
 
-          // ── anomalyScore: EIF returns negative path-length scores, GNN returns 0-1 ──
-          // Collect every possible score field
+          // ── anomalyScore: Use the true community fraud rate calculated by the ML pipeline ──
+          const cfr = n.communityFraudRate ?? n.community_fraud_rate;
           const candidates = [
-            n.anomalyScore, n.gnnScore, n.riskScore, n.score,
+            cfr, n.anomalyScore, n.gnnScore, n.riskScore, n.score,
             n.fraudScore, n.eifScore, n.risk,
           ].filter((v) => v != null && !isNaN(v));
 
@@ -237,8 +237,8 @@ console.log("TOTAL NODES:", data.nodes.length);
             rawScore = Math.min(1, Math.abs(rawScore));
           }
 
-          // If flagged anomalous but score is still near 0, set a visible floor
-          const score = isAnom && rawScore < 0.5 ? Math.max(rawScore, 0.82) : rawScore;
+          // Use the raw ML score exactly as calculated
+          const score = rawScore;
 
           // ── ringIds ──
           let ringIds: number[] = [];

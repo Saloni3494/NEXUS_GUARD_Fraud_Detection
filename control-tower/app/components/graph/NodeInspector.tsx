@@ -9,16 +9,10 @@ interface NodeData {
   _id: any;
   node_id: number;
   is_fraud: string;
-  account_age_days: string;
-  balance: string;
-  in_out_ratio: string;
-  pagerank: string;
-  tx_velocity: string;
-  in_degree: string;
-  out_degree: string;
-  total_incoming: string;
-  total_outgoing: string;
-  risk_ratio: string;
+  community_id: string;
+  ring_membership: string;
+  community_fraud_rate: string;
+  second_hop_fraud_rate: string;
   anomaly_score: number;
   is_anomalous: number;
   reasons?: string[];
@@ -161,17 +155,10 @@ export function NodeInspector({ node, onClose }: NodeInspectorProps) {
     : (node.is_anomalous ?? false);
   const role = node.role ?? "NORMAL";
 
-  const inDeg      = Number(nodeData?.in_degree      ?? 0);
-  const outDeg     = Number(nodeData?.out_degree     ?? 0);
-  const maxDeg     = Math.max(inDeg, outDeg, 1);
-  const txVelocity = Number(nodeData?.tx_velocity    ?? 0);
-  const inOutRatio = Number(nodeData?.in_out_ratio   ?? 0);
-  const riskRatio  = Number(nodeData?.risk_ratio     ?? 0);
-  const totalIn    = Number(nodeData?.total_incoming ?? 0);
-  const totalOut   = Number(nodeData?.total_outgoing ?? 0);
-  const balance    = Number(nodeData?.balance        ?? 0);
-  const pagerank   = Number(nodeData?.pagerank       ?? node.pagerank ?? 0);
-  const acctAge    = Number(nodeData?.account_age_days ?? 0);
+  const communityId = nodeData?.community_id ?? "—";
+  const ringMembership = nodeData?.ring_membership ?? "—";
+  const communityFraudRate = Number(nodeData?.community_fraud_rate ?? 0);
+  const secondHopFraudRate = Number(nodeData?.second_hop_fraud_rate ?? 0);
 
   const shapFactors = nodeData?.shap_factors ?? [];
   const maxAbs = shapFactors.reduce((m, s) => Math.max(m, Math.abs(s.impact)), 0);
@@ -247,48 +234,24 @@ export function NodeInspector({ node, onClose }: NodeInspectorProps) {
         </div>
       )}
 
-      {/* Account overview */}
+      {/* ML Overview */}
       {nodeData && (
-        <Section title="Account Overview">
-          <Row label="Account Age"
-            value={`${fmt(acctAge, 0)} days`}
-            valueColor={acctAge < 30 ? "#f97316" : "#fff"} />
-          <Row label="Balance"
-            value={`₹ ${fmt(balance)}`}
-            valueColor={balance < 0 ? "#ef4444" : "#fff"} />
-          <Row label="PageRank" value={pagerank.toFixed(6)} valueColor="#60a5fa" />
-        </Section>
-      )}
-
-      {/* Transaction flow */}
-      {nodeData && (
-        <Section title="Transaction Flow">
-          <Row label="Total Incoming" value={`₹ ${fmt(totalIn)}`}  valueColor="#22c55e" />
-          <Row label="Total Outgoing" value={`₹ ${fmt(totalOut)}`} valueColor="#ef4444" />
-          <Row label="In / Out Ratio"
-            value={fmt(inOutRatio, 3)}
-            valueColor={inOutRatio > 2 ? "#ef4444" : inOutRatio > 1 ? "#f97316" : "#fff"} />
-          <Row label="Tx Velocity"
-            value={fmt(txVelocity, 0)}
-            valueColor={txVelocity > 50 ? "#ef4444" : "#fff"} />
+        <Section title="Risk Factors (ML Model)">
+          <Row label="Community ID" value={communityId} />
+          <Row label="Ring Membership" value={ringMembership} valueColor={String(ringMembership) !== "0" ? "#ef4444" : "#fff"} />
+          <Row label="Community Fraud Rate" 
+            value={`${(communityFraudRate * 100).toFixed(2)}%`} 
+            valueColor={riskColor(communityFraudRate)} />
+          <Row label="Second Hop Fraud Rate" 
+            value={`${(secondHopFraudRate * 100).toFixed(2)}%`} 
+            valueColor={riskColor(secondHopFraudRate)} />
         </Section>
       )}
 
       {/* Graph topology */}
       <Section title="Graph Topology">
-        {nodeData && (
-          <>
-            <div className="mb-1">
-              <Row label="In-Degree" value={fmt(inDeg, 0)} valueColor={inDeg > 50 ? "#ef4444" : "#fff"} />
-              <StatBar value={inDeg} max={maxDeg} color="#60a5fa" />
-            </div>
-            <div className="mb-1">
-              <Row label="Out-Degree" value={fmt(outDeg, 0)} valueColor={outDeg > 50 ? "#ef4444" : "#fff"} />
-              <StatBar value={outDeg} max={maxDeg} color="#f97316" />
-            </div>
-          </>
-        )}
-        <Row label="PageRank" value={pagerank.toFixed(4)} valueColor="#60a5fa" />
+
+        <Row label="PageRank" value={(node.pagerank ?? 0).toFixed(4)} valueColor="#60a5fa" />
         <Row label="Volume"   value={node.volume ?? 0} />
         {node.clusterId !== undefined && <Row label="Cluster ID" value={String(node.clusterId)} />}
         {node.clusterFraudRate !== undefined && (
@@ -307,10 +270,6 @@ export function NodeInspector({ node, onClose }: NodeInspectorProps) {
           <Row label="Anomaly Score"
             value={`${(anomalyScore * 100).toFixed(2)}%`}
             valueColor={riskColor(anomalyScore)} />
-          <Row label="Risk Ratio"
-            value={fmt(riskRatio, 4)}
-            valueColor={riskRatio > 0.5 ? "#ef4444" : riskRatio > 0.2 ? "#f97316" : "#fff"} />
-          <StatBar value={riskRatio} max={1} color={riskColor(riskRatio)} />
         </Section>
       )}
 
