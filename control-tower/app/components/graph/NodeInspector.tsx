@@ -153,9 +153,13 @@ export function NodeInspector({ node, onClose }: NodeInspectorProps) {
 
   // Use snake_case fields from raw MongoDB response
   const anomalyScore = nodeData?.anomaly_score  ?? node.anomalyScore  ?? 0;
-  const isAnomalous  = nodeData ? nodeData.is_anomalous === 1 : node.is_anomalous;
-  const isFraud      = nodeData?.is_fraud === "1";
-  const role         = node.role ?? "NORMAL";
+  const isAnom  = nodeData 
+    ? (String(nodeData.is_anomalous) === "1" || String(nodeData.is_fraud) === "1" || String(nodeData.is_fraud) === "1.0") 
+    : node.is_anomalous;
+  const isFraudNode = nodeData 
+    ? (String(nodeData.is_fraud) === "1" || String(nodeData.is_fraud) === "1.0") 
+    : (node.is_anomalous ?? false);
+  const role = node.role ?? "NORMAL";
 
   const inDeg      = Number(nodeData?.in_degree      ?? 0);
   const outDeg     = Number(nodeData?.out_degree     ?? 0);
@@ -201,19 +205,19 @@ export function NodeInspector({ node, onClose }: NodeInspectorProps) {
         <div className="flex gap-2 flex-wrap justify-center">
           <div className="px-3 py-1 rounded-full text-xs font-mono font-bold"
             style={{
-              background: isAnomalous ? "rgba(239,68,68,0.15)" : "rgba(34,197,94,0.12)",
-              border: `1px solid ${isAnomalous ? "#ef444466" : "#22c55e66"}`,
-              color: isAnomalous ? "#ef4444" : "#22c55e",
+              background: isAnom ? "rgba(239,68,68,0.15)" : "rgba(34,197,94,0.12)",
+              border: `1px solid ${isAnom ? "#ef444466" : "#22c55e66"}`,
+              color: isAnom ? "#ef4444" : "#22c55e",
             }}>
-            {isAnomalous ? "⚠ ANOMALOUS" : "✓ CLEAN"}
+            {isAnom ? "⚠ ANOMALOUS" : "✓ CLEAN"}
           </div>
           <div className="px-3 py-1 rounded-full text-xs font-mono font-bold"
             style={{
-              background: isFraud ? "rgba(239,68,68,0.15)" : "rgba(34,197,94,0.12)",
-              border: `1px solid ${isFraud ? "#ef444466" : "#22c55e66"}`,
-              color: isFraud ? "#ef4444" : "#22c55e",
+              background: isFraudNode ? "rgba(239,68,68,0.15)" : "rgba(34,197,94,0.12)",
+              border: `1px solid ${isFraudNode ? "#ef444466" : "#22c55e66"}`,
+              color: isFraudNode ? "#ef4444" : "#22c55e",
             }}>
-            {isFraud ? "FRAUD" : "LEGIT"}
+            {isFraudNode ? "FRAUD" : "LEGIT"}
           </div>
           <div className="px-3 py-1.5 rounded-full text-xs font-mono font-bold tracking-wider"
             style={{
