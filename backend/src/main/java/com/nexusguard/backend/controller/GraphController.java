@@ -45,9 +45,12 @@ public class GraphController {
                                         if (nodeIdObj == null) return null;
 
                                         String nodeId = nodeIdObj.toString();
-                                        double anomalyScore = parseDouble(doc.get("anomaly_score"));
-                                        boolean isAnomalous = "1"
-                                                        .equals(doc.getOrDefault("is_anomalous", "0").toString());
+                                        Object anomalyScoreObj = doc.get("anomaly_score");
+                                        if (anomalyScoreObj == null) anomalyScoreObj = doc.get("community_fraud_rate");
+                                        double anomalyScore = parseDouble(anomalyScoreObj);
+
+                                        String isAnomalousStr = doc.getOrDefault("is_anomalous", doc.getOrDefault("is_fraud", "0")).toString();
+                                        boolean isAnomalous = "1".equals(isAnomalousStr) || "true".equalsIgnoreCase(isAnomalousStr) || "1.0".equals(isAnomalousStr);
                                         long txVelocity = parseLong(doc.get("tx_count"));
 
                                         return new GraphNodeDTO(nodeId, anomalyScore, isAnomalous, txVelocity);
@@ -101,9 +104,12 @@ public class GraphController {
 
                 return mongo.findOne(query, Map.class, "nodes")
                                 .map(doc -> {
-                                        double anomalyScore = parseDouble(doc.get("anomaly_score"));
-                                        boolean isAnomalous = "1"
-                                                        .equals(doc.getOrDefault("is_anomalous", "0").toString());
+                                        Object anomalyScoreObj = doc.get("anomaly_score");
+                                        if (anomalyScoreObj == null) anomalyScoreObj = doc.get("community_fraud_rate");
+                                        double anomalyScore = parseDouble(anomalyScoreObj);
+
+                                        String isAnomalousStr = doc.getOrDefault("is_anomalous", doc.getOrDefault("is_fraud", "0")).toString();
+                                        boolean isAnomalous = "1".equals(isAnomalousStr) || "true".equalsIgnoreCase(isAnomalousStr) || "1.0".equals(isAnomalousStr);
 
                                         @SuppressWarnings("unchecked")
                                         List<String> reasons = (List<String>) doc.getOrDefault("reasons", List.of());
